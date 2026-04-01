@@ -30,7 +30,7 @@ const PORT = parseInt(process.env.PORT || "8080");
 const BASE_URL = process.env.BASE_URL || "http://localhost:8080";
 const VERSION = "0.0.3";
 const DM_PIN = process.env.DM_PIN || "";
-const PROFILE_DIR = process.env.TWITTER_MCP_PROFILE || join(homedir(), ".twitter-bridge-mcp", "profile");
+const PROFILE_DIR = process.env.TWITTER_MCP_PROFILE || join(homedir(), ".x-mcp-bridge", "profile");
 
 if (DM_PIN && !/^\d{4}$/.test(DM_PIN)) {
   console.error("Error: DM_PIN must be exactly 4 digits"); process.exit(1);
