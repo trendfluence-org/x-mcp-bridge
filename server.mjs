@@ -149,9 +149,10 @@ async function getBrowserPage() {
   await _page.goto("https://x.com/home", { waitUntil: "domcontentloaded", timeout: 30000 }).catch(() => {});
   var url = _page.url();
   var needsLogin = url.includes("/login") || url.includes("/i/flow/login") || url.includes("/i/flow/signup");
+  var hasError = !needsLogin && await _page.evaluate('document.body ? document.body.innerText.includes("Something went wrong") : false').catch(() => false);
 
-  if (needsLogin) {
-    console.error("Session expired.");
+  if (needsLogin || hasError) {
+    console.error("Session expired or invalid — triggering re-login.");
     await _browserCtx.close();
     _browserCtx = null;
     _page = null;
@@ -270,6 +271,16 @@ async function openAndParseTweets(url, count, waitMs) {
     console.error("Twitter error page detected, reloading...");
     await page.reload({ waitUntil: "domcontentloaded" });
     await sleep(4000);
+    hasError = await page.evaluate('document.body ? document.body.innerText.includes("Something went wrong") : false');
+    if (hasError) {
+      // Session is expired — close browser, clear cookies, trigger re-login
+      await _browserCtx.close().catch(() => {});
+      _browserCtx = null; _page = null;
+      var { rmSync } = await import("fs");
+      rmSync(join(PROFILE_DIR, "Default", "Cookies"), { force: true });
+      if (!_loginTask) _loginTask = runLoginFlow();
+      throw new Error("Your X/Twitter session has expired. A login browser window has been opened — please sign in to X/Twitter, then retry this tool.");
+    }
   }
   return await page.evaluate(parseTweetsJS(count || 20));
 }
