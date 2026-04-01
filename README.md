@@ -2,8 +2,8 @@
 
 <p align="left">
   <a href="https://www.npmjs.com/package/x-mcp-bridge" target="_blank"><img src="https://img.shields.io/npm/v/x-mcp-bridge?color=blue" alt="npm"></a>
-  <a href="https://github.com/trendfluence-org/x-mcp-server/actions/workflows/release.yml" target="_blank"><img src="https://github.com/trendfluence-org/x-mcp-server/actions/workflows/release.yml/badge.svg?branch=main" alt="Release"></a>
-  <a href="https://github.com/trendfluence-org/x-mcp-server/blob/main/LICENSE" target="_blank"><img src="https://img.shields.io/badge/License-MIT-%233fb950?labelColor=32383f" alt="License"></a>
+  <a href="https://github.com/trendfluence-org/x-mcp-bridge/actions/workflows/release.yml" target="_blank"><img src="https://github.com/trendfluence-org/x-mcp-bridge/actions/workflows/release.yml/badge.svg?branch=main" alt="Release"></a>
+  <a href="https://github.com/trendfluence-org/x-mcp-bridge/blob/main/LICENSE" target="_blank"><img src="https://img.shields.io/badge/License-MIT-%233fb950?labelColor=32383f" alt="License"></a>
 </p>
 
 Connect Claude to Twitter/X — without paying $100/month for the official API. Uses Playwright to control a managed Chromium session, wrapped as an MCP server.
@@ -152,7 +152,7 @@ npx x-mcp-bridge              # starts HTTP server on :8080
 
 **One-click installation** for Claude Desktop users:
 
-1. Download the latest `.mcpb` from [Releases](https://github.com/trendfluence-org/x-mcp-server/releases/latest)
+1. Download the latest `.mcpb` from [Releases](https://github.com/trendfluence-org/x-mcp-bridge/releases/latest)
 2. Drag it into Claude Desktop, or go to **File → Install Extension...**
 3. On the first tool call, a browser window opens — log in to Twitter/X
 4. The session is saved to `~/.x-mcp-bridge/profile/`. No login needed on subsequent runs.
@@ -189,7 +189,7 @@ npx x-mcp-bridge              # starts HTTP server on :8080
 ### Installation
 
 ```bash
-git clone https://github.com/trendfluence-org/x-mcp-server.git
+git clone https://github.com/trendfluence-org/x-mcp-bridge.git
 cd x-mcp-server
 npm install          # also downloads Playwright Chromium (~100MB, one-time)
 node server.mjs      # starts HTTP server on :8080
@@ -290,7 +290,7 @@ curl -s -X POST http://localhost:8080/mcp \
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/trendfluence-org/x-mcp-server.git
+git clone https://github.com/trendfluence-org/x-mcp-bridge.git
 cd x-mcp-server
 
 # 2. Install dependencies (also downloads Playwright Chromium ~100MB)
