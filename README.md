@@ -241,7 +241,7 @@ node server.mjs --no-headless
 
 ```bash
 echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}
-{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"twitter_status","arguments":{}}}' \
+{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"twitter_timeline","arguments":{"count":3}}}' \
   | node server.mjs --stdio 2>/dev/null
 ```
 
