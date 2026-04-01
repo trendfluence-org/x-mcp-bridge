@@ -107,7 +107,27 @@ async function getBrowserPage() {
 
   await ensureBrowserInstalled();
 
-  // Start headless; if not logged in, reopen visible for login then return headless
+  // If no saved session exists, open visible browser immediately for login
+  var hasSession = existsSync(join(PROFILE_DIR, "Default", "Cookies"));
+  if (!hasSession) {
+    console.error("No session found. Opening visible browser for Twitter login...");
+    _browserCtx = await launchContext(false);
+    _page = _browserCtx.pages()[0] || await _browserCtx.newPage();
+    await _page.goto("https://x.com/login");
+
+    console.error("Please log in to Twitter/X in the browser window. Waiting up to 5 minutes...");
+    await _page.waitForURL(/x\.com\/(home|[^/]+\/status)/, { timeout: 300000 });
+    console.error("Login successful. Saving session and switching to headless...");
+
+    await _browserCtx.close();
+    _browserCtx = await launchContext(true);
+    _page = _browserCtx.pages()[0] || await _browserCtx.newPage();
+    await _page.goto("https://x.com/home", { waitUntil: "domcontentloaded", timeout: 30000 }).catch(() => {});
+    console.error("Browser ready.");
+    return _page;
+  }
+
+  // Session exists — start headless; reopen visible if session has expired
   console.error("Starting browser (headless)...");
   _browserCtx = await launchContext(true);
   _page = _browserCtx.pages()[0] || await _browserCtx.newPage();
@@ -117,7 +137,7 @@ async function getBrowserPage() {
   var needsLogin = url.includes("/login") || url.includes("/i/flow/login") || url.includes("/i/flow/signup");
 
   if (needsLogin) {
-    console.error("Session not found. Opening visible browser for Twitter login...");
+    console.error("Session expired. Opening visible browser for Twitter login...");
     await _browserCtx.close();
 
     _browserCtx = await launchContext(false);
