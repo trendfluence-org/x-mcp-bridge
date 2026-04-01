@@ -99,6 +99,7 @@ async function launchContext(headless) {
     headless: NO_HEADLESS ? false : headless,
     viewport: { width: 1280, height: 720 },
     locale: "en-US",
+    permissions: ["clipboard-read", "clipboard-write"],
     args: ["--no-sandbox", "--disable-blink-features=AutomationControlled"],
   });
 }
@@ -251,14 +252,14 @@ function extractTweetId(url) {
   return m ? m[1] : "";
 }
 
-// Insert text into a Twitter contenteditable box.
-// execCommand('insertText') fires the input events React listens to, enabling the post button.
-// Falls back to ClipboardEvent paste if execCommand fails.
+// Insert text into a Twitter contenteditable box via real clipboard paste.
+// Writing to navigator.clipboard and pressing Ctrl/Cmd+V goes through Twitter's
+// actual paste handler, which correctly triggers React state and enables the post button.
 async function pasteText(page, selector, text) {
-  var inserted = await page.evaluate('(function(){ var t=document.querySelector(' + jsStr(selector) + '); if(!t)return false; t.focus(); return document.execCommand("insertText",false,' + jsStr(text) + '); })()');
-  if (!inserted) {
-    await page.evaluate('(function(){ var t=document.querySelector(' + jsStr(selector) + '); if(!t)return; t.focus(); var dt=new DataTransfer(); dt.setData("text/plain",' + jsStr(text) + '); t.dispatchEvent(new ClipboardEvent("paste",{clipboardData:dt,bubbles:true,cancelable:true})); })()');
-  }
+  await page.evaluate('navigator.clipboard.writeText(' + jsStr(text) + ')');
+  await page.click(selector);
+  var mod = process.platform === "darwin" ? "Meta" : "Control";
+  await page.keyboard.press(mod + "+v");
 }
 
 // === SHARED TWEET PARSER ===
@@ -410,7 +411,7 @@ function makeServer() {
     await page.goto("https://x.com/compose/post", { waitUntil: "domcontentloaded" });
     await sleep(3000);
     var pasteContent = p.text + "\n" + p.tweet_url;
-    await page.evaluate('(function(){ var t=document.querySelector(\'[data-testid="tweetTextarea_0"]\'); t.focus(); var dt=new DataTransfer(); dt.setData("text/plain",' + jsStr(pasteContent) + '); t.dispatchEvent(new ClipboardEvent("paste",{clipboardData:dt,bubbles:true,cancelable:true})); })()');
+    await pasteText(page, '[data-testid="tweetTextarea_0"]', pasteContent);
     for (var a = 0; a < 5; a++) {
       await sleep(2000);
       var state = await page.evaluate('(function(){ var b=document.querySelector(\'[data-testid="tweetButtonInline"]\'); return b&&!b.disabled?"ready":"no"; })()');
