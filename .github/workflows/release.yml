@@ -1,0 +1,94 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths: ['package.json']  # Only trigger when package.json changes
+
+jobs:
+  check-version-bump:
+    runs-on: ubuntu-latest
+    outputs:
+      should-release: ${{ steps.check.outputs.should-release }}
+      version: ${{ steps.check.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check if version was bumped
+        id: check
+        run: |
+          CURRENT=$(jq -r '.version' package.json)
+          echo "Current version: $CURRENT"
+
+          git checkout HEAD~1 -- package.json 2>/dev/null || true
+          PREVIOUS=$(jq -r '.version' package.json 2>/dev/null || echo "0.0.0")
+          git checkout HEAD -- package.json
+          echo "Previous version: $PREVIOUS"
+
+          if [ "$CURRENT" != "$PREVIOUS" ]; then
+            echo "Version bump detected: $PREVIOUS → $CURRENT"
+            echo "should-release=true" >> $GITHUB_OUTPUT
+            echo "version=$CURRENT" >> $GITHUB_OUTPUT
+          else
+            echo "No version change detected"
+            echo "should-release=false" >> $GITHUB_OUTPUT
+          fi
+
+  release:
+    needs: check-version-bump
+    if: needs.check-version-bump.outputs.should-release == 'true'
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.check-version-bump.outputs.version }}
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: oven-sh/setup-bun@v2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Sync manifest.json version
+        run: |
+          sed -i 's/"version": ".*"/"version": "'"$VERSION"'"/' manifest.json
+          echo "Updated manifest.json to v$VERSION"
+
+      - name: Create release tag
+        run: |
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          if git tag -l "v$VERSION" | grep -q "v$VERSION"; then
+            echo "Tag v$VERSION already exists, skipping"
+          else
+            git add manifest.json
+            git diff --staged --quiet || git commit -m "chore: sync manifest.json to v$VERSION [skip ci]"
+            git tag "v$VERSION"
+            git push origin HEAD:main --follow-tags
+            echo "Created and pushed tag v$VERSION"
+          fi
+
+      - name: Validate and build MCPB bundle
+        run: |
+          bunx @anthropic-ai/mcpb validate manifest.json
+          bunx @anthropic-ai/mcpb pack .
+          # mcpb names the output after the directory; rename to match convention
+          mv *.mcpb x-mcp-server-v${VERSION}.mcpb
+          echo "Built x-mcp-server-v${VERSION}.mcpb ($(du -sh x-mcp-server-v${VERSION}.mcpb | cut -f1))"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.VERSION }}
+          name: "X MCP Server v${{ env.VERSION }}"
+          files: "*.mcpb"
+          generate_release_notes: true
+          draft: false
+          prerelease: false

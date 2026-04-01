@@ -76,13 +76,6 @@ All config via environment variables or `.env` file:
 | `OAUTH_CLIENT_ID` | `twitter-mcp-client` | OAuth client ID |
 | `OAUTH_CLIENT_SECRET` | *(auto-generated)* | OAuth client secret |
 
-## Build MCPB bundle
-
-```bash
-bash build-mcpb.sh
-# Creates x-mcp-server-v0.0.1.mcpb
-```
-
 ## Notes
 
 - **React contenteditable** — Twitter's compose box is a `contenteditable` div. The server uses `ClipboardEvent paste` for reliable text input.
