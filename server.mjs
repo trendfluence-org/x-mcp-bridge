@@ -116,6 +116,8 @@ async function runLoginFlow() {
     await page.waitForTimeout(2000); // flush cookies to disk
     await ctx.close();
     console.error("Login browser closed. Session ready.");
+  } catch(e) {
+    console.error("Login flow error:", e.message);
   } finally {
     _loginTask = null;
   }
