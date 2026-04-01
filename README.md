@@ -1,7 +1,7 @@
 # X MCP Server
 
 <p align="left">
-  <a href="https://www.npmjs.com/package/twitter-bridge-mcp" target="_blank"><img src="https://img.shields.io/npm/v/twitter-bridge-mcp?color=blue" alt="npm"></a>
+  <a href="https://github.com/trendfluence-org/x-mcp-server/releases/latest" target="_blank"><img src="https://img.shields.io/github/v/release/trendfluence-org/x-mcp-server?color=blue" alt="Latest Release"></a>
   <a href="https://github.com/trendfluence-org/x-mcp-server/actions/workflows/release.yml" target="_blank"><img src="https://github.com/trendfluence-org/x-mcp-server/actions/workflows/release.yml/badge.svg?branch=main" alt="Release"></a>
   <a href="https://github.com/trendfluence-org/x-mcp-server/blob/main/LICENSE" target="_blank"><img src="https://img.shields.io/badge/License-MIT-%233fb950?labelColor=32383f" alt="License"></a>
 </p>
@@ -84,13 +84,13 @@ Show me my unread DMs and summarize them
   "mcpServers": {
     "twitter": {
       "command": "npx",
-      "args": ["-y", "twitter-bridge-mcp", "--stdio"]
+      "args": ["-y", "github:trendfluence-org/x-mcp-server", "--stdio"]
     }
   }
 }
 ```
 
-On first use, Playwright Chromium is downloaded automatically (~100MB, one-time). A browser window then opens for you to log in to Twitter/X. The session is saved to `~/.twitter-bridge-mcp/profile/` — no login needed on subsequent runs.
+On first use, Playwright Chromium is downloaded automatically (~100MB, one-time). A browser window then opens for you to log in to Twitter/X. The session is saved to `~/.github:trendfluence-org/x-mcp-server/profile/` — no login needed on subsequent runs.
 
 > [!NOTE]
 > Early tool calls may return an error while the browser is still setting up. If that happens, retry after a few seconds.
@@ -103,15 +103,15 @@ On first use, Playwright Chromium is downloaded automatically (~100MB, one-time)
 **Session management:**
 
 ```bash
-npx twitter-bridge-mcp --login      # open browser, log in, save session, exit
-npx twitter-bridge-mcp --logout     # delete saved browser profile
-npx twitter-bridge-mcp --status     # check if session is valid and exit
+npx github:trendfluence-org/x-mcp-server --login      # open browser, log in, save session, exit
+npx github:trendfluence-org/x-mcp-server --logout     # delete saved browser profile
+npx github:trendfluence-org/x-mcp-server --status     # check if session is valid and exit
 ```
 
 **HTTP mode** (for Claude.ai remote or MCP Inspector):
 
 ```bash
-npx twitter-bridge-mcp              # starts HTTP server on :8080
+npx github:trendfluence-org/x-mcp-server              # starts HTTP server on :8080
 ```
 
 **Environment variables:**
@@ -120,7 +120,7 @@ npx twitter-bridge-mcp              # starts HTTP server on :8080
 |----------|---------|-------------|
 | `PORT` | `8080` | HTTP server port |
 | `BASE_URL` | `http://localhost:8080` | Public URL for OAuth discovery |
-| `TWITTER_MCP_PROFILE` | `~/.twitter-bridge-mcp/profile` | Browser profile directory |
+| `TWITTER_MCP_PROFILE` | `~/.github:trendfluence-org/x-mcp-server/profile` | Browser profile directory |
 | `HEADLESS` | `true` | Set `false` to show the browser window |
 | `DM_PIN` | *(empty)* | Twitter DM encryption PIN (4 digits, if set up) |
 
@@ -135,7 +135,7 @@ npx twitter-bridge-mcp              # starts HTTP server on :8080
 
 **Tools time out or are slow:**
 
-- Headless mode can trigger bot detection. Run `npx twitter-bridge-mcp --no-headless` to open a visible browser and debug.
+- Headless mode can trigger bot detection. Run `npx github:trendfluence-org/x-mcp-server --no-headless` to open a visible browser and debug.
 
 **Playwright Chromium not found:**
 
@@ -155,7 +155,7 @@ npx twitter-bridge-mcp              # starts HTTP server on :8080
 1. Download the latest `.mcpb` from [Releases](https://github.com/trendfluence-org/x-mcp-server/releases/latest)
 2. Drag it into Claude Desktop, or go to **File → Install Extension...**
 3. On the first tool call, a browser window opens — log in to Twitter/X
-4. The session is saved to `~/.twitter-bridge-mcp/profile/`. No login needed on subsequent runs.
+4. The session is saved to `~/.github:trendfluence-org/x-mcp-server/profile/`. No login needed on subsequent runs.
 
 ### MCP Bundle Setup Help
 
@@ -169,7 +169,7 @@ npx twitter-bridge-mcp              # starts HTTP server on :8080
 
 **Session issues:**
 
-- Browser profile is stored at `~/.twitter-bridge-mcp/profile/`
+- Browser profile is stored at `~/.github:trendfluence-org/x-mcp-server/profile/`
 - If Twitter invalidates your session, call any tool — a login window will reopen
 - To force a fresh login: delete the profile directory and restart
 
@@ -208,7 +208,7 @@ Expose with any HTTPS reverse proxy (Cloudflare Tunnel, ngrok, etc.) and add the
 |----------|---------|-------------|
 | `PORT` | `8080` | HTTP server port |
 | `BASE_URL` | `http://localhost:8080` | Public URL for OAuth discovery |
-| `TWITTER_MCP_PROFILE` | `~/.twitter-bridge-mcp/profile` | Browser profile directory |
+| `TWITTER_MCP_PROFILE` | `~/.github:trendfluence-org/x-mcp-server/profile` | Browser profile directory |
 | `HEADLESS` | `true` | Set `false` to show the browser window |
 | `DM_PIN` | *(empty)* | Twitter DM encryption PIN (4 digits, if set up) |
 | `OAUTH_CLIENT_ID` | `twitter-mcp-client` | OAuth client ID |
@@ -332,7 +332,7 @@ echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":
 
 **Session issues:**
 
-- Profile is stored at `~/.twitter-bridge-mcp/profile/`. Delete it and run `--login` to start fresh.
+- Profile is stored at `~/.github:trendfluence-org/x-mcp-server/profile/`. Delete it and run `--login` to start fresh.
 
 **Playwright Chromium not found:**
 
@@ -345,7 +345,7 @@ echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":
 
 ## Architecture
 
-1. **Managed browser** — Playwright launches and manages a persistent Chromium profile stored at `~/.twitter-bridge-mcp/profile/`. No external Chrome instance needed.
+1. **Managed browser** — Playwright launches and manages a persistent Chromium profile stored at `~/.github:trendfluence-org/x-mcp-server/profile/`. No external Chrome instance needed.
 2. **Auto login** — On first run with no session, the browser opens visibly so you can log in. After login it switches to headless. Session is saved to disk automatically.
 3. **MCP transports** — `--stdio` flag for Claude Desktop (mcpb); HTTP + OAuth 2.0 PKCE for Claude.ai remote.
 4. **Tool implementations** — Browser automation (open page → wait → parse DOM) for most tools; Twitter's internal GraphQL API for lightweight mutations (like, retweet, undo).
