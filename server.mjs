@@ -102,32 +102,36 @@ async function launchContext(headless) {
   });
 }
 
+async function doLogin() {
+  console.error("Opening visible browser for Twitter login...");
+  var ctx = await launchContext(false);
+  var page = ctx.pages()[0] || await ctx.newPage();
+  await page.goto("https://x.com/login");
+
+  console.error("Please log in to Twitter/X in the browser window. Waiting up to 5 minutes...");
+  await page.waitForURL(/x\.com\/(home|[^/]+\/status)/, { timeout: 300000 });
+  console.error("Login successful. Session saved. Closing login browser...");
+
+  // Give Playwright time to flush cookies to disk before closing
+  await page.waitForTimeout(2000);
+  await ctx.close();
+  _browserCtx = null;
+  _page = null;
+  console.error("Login browser closed.");
+}
+
 async function getBrowserPage() {
   if (_browserCtx && _page && !_page.isClosed()) return _page;
 
   await ensureBrowserInstalled();
 
-  // If no saved session exists, open visible browser immediately for login
+  // If no saved session exists, open visible browser for login first
   var hasSession = existsSync(join(PROFILE_DIR, "Default", "Cookies"));
   if (!hasSession) {
-    console.error("No session found. Opening visible browser for Twitter login...");
-    _browserCtx = await launchContext(false);
-    _page = _browserCtx.pages()[0] || await _browserCtx.newPage();
-    await _page.goto("https://x.com/login");
-
-    console.error("Please log in to Twitter/X in the browser window. Waiting up to 5 minutes...");
-    await _page.waitForURL(/x\.com\/(home|[^/]+\/status)/, { timeout: 300000 });
-    console.error("Login successful. Saving session and switching to headless...");
-
-    await _browserCtx.close();
-    _browserCtx = await launchContext(true);
-    _page = _browserCtx.pages()[0] || await _browserCtx.newPage();
-    await _page.goto("https://x.com/home", { waitUntil: "domcontentloaded", timeout: 30000 }).catch(() => {});
-    console.error("Browser ready.");
-    return _page;
+    await doLogin();
   }
 
-  // Session exists — start headless; reopen visible if session has expired
+  // Start headless with saved session; reopen visible if session has expired
   console.error("Starting browser (headless)...");
   _browserCtx = await launchContext(true);
   _page = _browserCtx.pages()[0] || await _browserCtx.newPage();
@@ -137,24 +141,17 @@ async function getBrowserPage() {
   var needsLogin = url.includes("/login") || url.includes("/i/flow/login") || url.includes("/i/flow/signup");
 
   if (needsLogin) {
-    console.error("Session expired. Opening visible browser for Twitter login...");
+    console.error("Session expired.");
     await _browserCtx.close();
-
-    _browserCtx = await launchContext(false);
-    _page = _browserCtx.pages()[0] || await _browserCtx.newPage();
-    await _page.goto("https://x.com/login");
-
-    console.error("Please log in to Twitter/X in the browser window. Waiting up to 5 minutes...");
-    await _page.waitForURL(/x\.com\/(home|[^/]+\/status)/, { timeout: 300000 });
-    console.error("Login successful. Saving session and switching to headless...");
-
-    await _browserCtx.close();
+    _browserCtx = null;
+    _page = null;
+    await doLogin();
     _browserCtx = await launchContext(true);
     _page = _browserCtx.pages()[0] || await _browserCtx.newPage();
     await _page.goto("https://x.com/home", { waitUntil: "domcontentloaded", timeout: 30000 }).catch(() => {});
-    console.error("Browser ready.");
   }
 
+  console.error("Browser ready.");
   return _page;
 }
 
