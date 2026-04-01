@@ -37,7 +37,7 @@ The browser window opens so you can watch every navigation. Combine with HTTP te
 **Step 1 — start the server**
 ```bash
 node server.mjs
-# Twitter MCP Bridge v0.0.2: http://0.0.0.0:8080/mcp
+# Twitter MCP Bridge v0.0.3: http://0.0.0.0:8080/mcp
 ```
 
 **Step 2 — get an OAuth token**
