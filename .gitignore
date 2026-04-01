@@ -1,0 +1,7 @@
+node_modules/
+.env
+*.bak
+*.old
+*.log
+.tokens.json
+*.mcpb

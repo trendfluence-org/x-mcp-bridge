@@ -1,0 +1,46 @@
+{
+  "manifest_version": "0.4",
+  "name": "x-mcp-server",
+  "display_name": "X MCP Server",
+  "version": "0.0.1",
+  "description": "Connect Claude to Twitter/X via browser automation — no API key needed",
+  "long_description": "# Twitter Bridge MCP\n\nConnect Claude to your Twitter/X account using browser automation via the Chrome DevTools Protocol (CDP). No Twitter API key required.\n\n## Prerequisites\n\n1. **bb-browser** must be installed. Set `BB_BROWSER_PATH` if it's not at `~/local/bin/bb-browser`.\n2. **Chrome** must be running with remote debugging enabled:\n   ```\n   /Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome \\\n     --remote-debugging-port=9222 \\\n     --user-data-dir=$HOME/chrome-mcp-profile\n   ```\n3. Log in to Twitter/X in that Chrome instance before using the tools.\n\n## Configuration\n\nSet environment variables via the MCP server config or a `.env` file:\n- `BB_BROWSER_PATH` — path to bb-browser binary (default: `~/local/bin/bb-browser`)\n- `CDP_PORT` — Chrome remote debugging port (default: `9222`)\n- `DM_PIN` — 4-digit PIN for DM unlock screen (optional)\n",
+  "license": "MIT",
+  "keywords": ["twitter", "x", "mcp", "mcpb", "browser-automation", "claude"],
+  "server": {
+    "type": "node",
+    "entry_point": "server.mjs",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/server.mjs", "--stdio"]
+    }
+  },
+  "tools": [
+    { "name": "twitter_post",         "description": "Post a new tweet" },
+    { "name": "twitter_reply",        "description": "Reply to a tweet" },
+    { "name": "twitter_like",         "description": "Like a tweet (no page navigation)" },
+    { "name": "twitter_retweet",      "description": "Retweet (no page navigation)" },
+    { "name": "twitter_undo",         "description": "Undo an action: unlike, unretweet, or delete tweet" },
+    { "name": "twitter_quote",        "description": "Quote tweet — posts on your timeline with embedded tweet card" },
+    { "name": "twitter_follow",       "description": "Follow a user" },
+    { "name": "twitter_unfollow",     "description": "Unfollow a user" },
+    { "name": "twitter_search",       "description": "Search tweets" },
+    { "name": "twitter_notifications","description": "Get your notifications" },
+    { "name": "twitter_my_replies",   "description": "Get your own replies to other tweets" },
+    { "name": "twitter_mentions",     "description": "Get mentions and replies to your tweets" },
+    { "name": "twitter_bookmarks",    "description": "Get your bookmarks" },
+    { "name": "twitter_tweets",       "description": "Get a user's tweets" },
+    { "name": "twitter_user",         "description": "Get a user's profile" },
+    { "name": "twitter_timeline",     "description": "Get your home timeline" },
+    { "name": "twitter_view_tweet",   "description": "View a tweet with full details and image URLs" },
+    { "name": "twitter_screenshot",   "description": "Screenshot the current Twitter page" },
+    { "name": "twitter_dm_read",      "description": "Read your DM conversations" },
+    { "name": "browser_open",         "description": "Open any URL (http/https only)" },
+    { "name": "browser_snapshot",     "description": "Get current page content" }
+  ],
+  "user_config": {},
+  "compatibility": {
+    "claude_desktop": ">=0.10.0",
+    "platforms": ["darwin", "linux", "win32"]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "name": "x-mcp-server",
+  "version": "0.0.1",
+  "description": "Connect Claude to Twitter/X via Playwright browser automation — no API key needed",
+  "type": "module",
+  "main": "server.mjs",
+  "scripts": {
+    "start": "node server.mjs",
+    "postinstall": "playwright install chromium"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "playwright": "^1.52.0",
+    "zod": "^3.24.3",
+    "dotenv": "^16.4.7"
+  },
+  "keywords": [
+    "mcp",
+    "twitter",
+    "x",
+    "claude",
+    "browser-automation",
+    "playwright"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}
