@@ -1,11 +1,11 @@
 {
-  "name": "x-mcp-server",
+  "name": "twitter-bridge-mcp",
   "version": "0.0.3",
   "description": "Connect Claude to Twitter/X via Playwright browser automation — no API key needed",
   "type": "module",
   "main": "server.mjs",
   "bin": {
-    "x-mcp-server": "server.mjs"
+    "twitter-bridge-mcp": "server.mjs"
   },
   "files": [
     "server.mjs",
