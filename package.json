@@ -1,6 +1,6 @@
 {
   "name": "x-mcp-server",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Connect Claude to Twitter/X via Playwright browser automation — no API key needed",
   "type": "module",
   "main": "server.mjs",
@@ -10,9 +10,11 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",
+    "dotenv": "^16.4.7",
     "playwright": "^1.52.0",
-    "zod": "^3.24.3",
-    "dotenv": "^16.4.7"
+    "playwright-extra": "^4.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "zod": "^3.24.3"
   },
   "keywords": [
     "mcp",

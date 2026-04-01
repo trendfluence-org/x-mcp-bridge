@@ -1,7 +1,10 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { chromium } from "playwright";
+import { chromium as chromiumExtra } from "playwright-extra";
+import StealthPlugin from "puppeteer-extra-plugin-stealth";
+chromiumExtra.use(StealthPlugin());
+const chromium = chromiumExtra;
 import { createServer } from "http";
 import { randomBytes, createHash } from "crypto";
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
@@ -10,15 +13,21 @@ import { homedir } from "os";
 import { z } from "zod";
 import "dotenv/config";
 
+// CLI flags
+const STDIO_MODE   = process.argv.includes("--stdio");
+const NO_HEADLESS  = process.argv.includes("--no-headless") || process.env.HEADLESS === "false";
+const CMD_LOGIN    = process.argv.includes("--login");
+const CMD_LOGOUT   = process.argv.includes("--logout");
+const CMD_STATUS   = process.argv.includes("--status");
+
 // In stdio mode stdout is the MCP protocol channel — redirect all logs to stderr
-const STDIO_MODE = process.argv.includes("--stdio");
 if (STDIO_MODE) { console.log = console.error; }
 
 // === CONFIG ===
 
 const PORT = parseInt(process.env.PORT || "8080");
 const BASE_URL = process.env.BASE_URL || "http://localhost:8080";
-const VERSION = "0.7.0";
+const VERSION = "0.0.3";
 const DM_PIN = process.env.DM_PIN || "";
 const PROFILE_DIR = process.env.TWITTER_MCP_PROFILE || join(homedir(), ".twitter-bridge-mcp", "profile");
 
@@ -85,7 +94,7 @@ async function ensureBrowserInstalled() {
 
 async function launchContext(headless) {
   return chromium.launchPersistentContext(PROFILE_DIR, {
-    headless: headless,
+    headless: NO_HEADLESS ? false : headless,
     viewport: { width: 1280, height: 720 },
     locale: "en-US",
     args: ["--no-sandbox", "--disable-blink-features=AutomationControlled"],
@@ -146,6 +155,54 @@ async function closeBrowser() {
   }
 }
 
+// === CLI COMMANDS ===
+
+async function runLogin() {
+  await ensureBrowserInstalled();
+  var ctx = await launchContext(false); // always visible for login
+  var page = ctx.pages()[0] || await ctx.newPage();
+  await page.goto("https://x.com/home", { waitUntil: "domcontentloaded", timeout: 30000 }).catch(() => {});
+  var url = page.url();
+  if (!url.includes("/login") && !url.includes("/i/flow")) {
+    console.error("Already logged in. Profile: " + PROFILE_DIR);
+    await ctx.close(); return;
+  }
+  await page.goto("https://x.com/login");
+  console.error("Please log in to Twitter/X in the browser window. Waiting up to 5 minutes...");
+  await page.waitForURL(/x\.com\/(home|[^/]+\/status)/, { timeout: 300000 });
+  console.error("Login successful! Session saved to: " + PROFILE_DIR);
+  await ctx.close();
+}
+
+async function runLogout() {
+  var { rmSync } = await import("fs");
+  if (existsSync(PROFILE_DIR)) {
+    rmSync(PROFILE_DIR, { recursive: true, force: true });
+    console.error("Logged out. Profile deleted: " + PROFILE_DIR);
+  } else {
+    console.error("No profile found at: " + PROFILE_DIR);
+  }
+}
+
+async function runStatus() {
+  await ensureBrowserInstalled();
+  console.error("Checking session...");
+  var ctx = await launchContext(true);
+  var page = ctx.pages()[0] || await ctx.newPage();
+  await page.goto("https://x.com/home", { waitUntil: "domcontentloaded", timeout: 30000 }).catch(() => {});
+  var url = page.url();
+  var loggedIn = !url.includes("/login") && !url.includes("/i/flow");
+  var hasError = await page.evaluate('document.body ? document.body.innerText.includes("Something went wrong") : true').catch(() => true);
+  await ctx.close();
+  if (loggedIn && !hasError) {
+    console.error("Status: Logged in ✓  Profile: " + PROFILE_DIR);
+  } else if (loggedIn && hasError) {
+    console.error("Status: Logged in but Twitter is showing errors (may be temporary). Profile: " + PROFILE_DIR);
+  } else {
+    console.error("Status: Not logged in.  Run: node server.mjs --login");
+  }
+}
+
 // === HELPERS ===
 
 function sleep(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
@@ -176,6 +233,13 @@ async function openAndParseTweets(url, count, waitMs) {
   var page = await getBrowserPage();
   await page.goto(url, { waitUntil: "domcontentloaded" });
   await sleep(waitMs || 4000);
+  // If Twitter shows its "Something went wrong" error page, reload once and retry
+  var hasError = await page.evaluate('document.body ? document.body.innerText.includes("Something went wrong") : false');
+  if (hasError) {
+    console.error("Twitter error page detected, reloading...");
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await sleep(4000);
+  }
   return await page.evaluate(parseTweetsJS(count || 20));
 }
 
@@ -463,7 +527,13 @@ function parseBody(req, maxBytes) {
   });
 }
 
-if (STDIO_MODE) {
+if (CMD_LOGIN) {
+  await runLogin(); process.exit(0);
+} else if (CMD_LOGOUT) {
+  await runLogout(); process.exit(0);
+} else if (CMD_STATUS) {
+  await runStatus(); process.exit(0);
+} else if (STDIO_MODE) {
   var stdioTransport = new StdioServerTransport();
   await makeServer().connect(stdioTransport);
 } else {
