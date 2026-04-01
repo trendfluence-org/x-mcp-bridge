@@ -2,10 +2,11 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { chromium as chromiumExtra } from "playwright-extra";
+import { chromium as playwrightChromium } from "playwright";
+import { addExtra } from "playwright-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
-chromiumExtra.use(StealthPlugin());
-const chromium = chromiumExtra;
+const chromium = addExtra(playwrightChromium);
+chromium.use(StealthPlugin());
 import { createServer } from "http";
 import { randomBytes, createHash } from "crypto";
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
