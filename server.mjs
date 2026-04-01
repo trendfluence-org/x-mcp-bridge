@@ -120,7 +120,8 @@ async function runLoginFlow() {
     console.error("Login browser closed. Session ready.");
   } catch(e) {
     console.error("Login flow error (will retry on next tool call):", e.message);
-    _loginTask = null; // reset so next tool call can try again
+  } finally {
+    _loginTask = null; // reset so next expiry can trigger a new login window
   }
 }
 
