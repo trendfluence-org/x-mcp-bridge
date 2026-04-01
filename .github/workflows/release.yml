@@ -40,6 +40,7 @@ jobs:
     needs: check-version-bump
     if: needs.check-version-bump.outputs.should-release == 'true'
     runs-on: ubuntu-latest
+    environment: prod
     env:
       VERSION: ${{ needs.check-version-bump.outputs.version }}
     permissions:
