@@ -71,7 +71,7 @@ Show me my unread DMs and summarize them
 <br/>
 <br/>
 
-## 🚀 npx Setup (Recommended — Universal)
+## 🚀 npx Setup (Recommended - Universal)
 
 **Prerequisites:** [Node.js 18+](https://nodejs.org).
 
