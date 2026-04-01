@@ -251,9 +251,14 @@ function extractTweetId(url) {
   return m ? m[1] : "";
 }
 
-// Paste text into a Twitter contenteditable box (more reliable than keyboard.type)
+// Insert text into a Twitter contenteditable box.
+// execCommand('insertText') fires the input events React listens to, enabling the post button.
+// Falls back to ClipboardEvent paste if execCommand fails.
 async function pasteText(page, selector, text) {
-  await page.evaluate('(function(){ var t=document.querySelector(' + jsStr(selector) + '); if(!t)return; t.focus(); var dt=new DataTransfer(); dt.setData("text/plain",' + jsStr(text) + '); t.dispatchEvent(new ClipboardEvent("paste",{clipboardData:dt,bubbles:true,cancelable:true})); })()');
+  var inserted = await page.evaluate('(function(){ var t=document.querySelector(' + jsStr(selector) + '); if(!t)return false; t.focus(); return document.execCommand("insertText",false,' + jsStr(text) + '); })()');
+  if (!inserted) {
+    await page.evaluate('(function(){ var t=document.querySelector(' + jsStr(selector) + '); if(!t)return; t.focus(); var dt=new DataTransfer(); dt.setData("text/plain",' + jsStr(text) + '); t.dispatchEvent(new ClipboardEvent("paste",{clipboardData:dt,bubbles:true,cancelable:true})); })()');
+  }
 }
 
 // === SHARED TWEET PARSER ===
@@ -332,7 +337,7 @@ function makeServer() {
 
   s.tool("twitter_post", "Post a new tweet", { text: z.string() }, async function(p) {
     var page = await getBrowserPage();
-    await page.goto("https://x.com/home", { waitUntil: "domcontentloaded" });
+    await page.goto("https://x.com/compose/post", { waitUntil: "domcontentloaded" });
     await sleep(3000);
     var hasBox = await page.evaluate('!!document.querySelector(\'[data-testid="tweetTextarea_0"]\')');
     if (!hasBox) return { content: [{ type: "text", text: "Error: compose box not found" }] };
