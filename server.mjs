@@ -337,7 +337,11 @@ function makeServer() {
     var hasBox = await page.evaluate('!!document.querySelector(\'[data-testid="tweetTextarea_0"]\')');
     if (!hasBox) return { content: [{ type: "text", text: "Error: compose box not found" }] };
     await pasteText(page, '[data-testid="tweetTextarea_0"]', p.text);
-    await sleep(500);
+    for (var a = 0; a < 5; a++) {
+      await sleep(1000);
+      var state = await page.evaluate('(function(){ var b=document.querySelector(\'[data-testid="tweetButtonInline"]\'); return b&&!b.disabled?"ready":"no"; })()');
+      if (state === "ready") break;
+    }
     var r = await page.evaluate('(function(){ var b=document.querySelector(\'[data-testid="tweetButtonInline"]\'); if(!b||b.disabled)return "not ready"; b.click(); return "posted"; })()');
     return { content: [{ type: "text", text: r }] };
   });
@@ -356,7 +360,11 @@ function makeServer() {
     // Last textarea on the page is the reply box
     await page.evaluate('document.querySelectorAll(\'[data-testid="tweetTextarea_0"]\')[document.querySelectorAll(\'[data-testid="tweetTextarea_0"]\').length-1].focus()');
     await pasteText(page, '[data-testid="tweetTextarea_0"]:last-of-type', p.text);
-    await sleep(500);
+    for (var a = 0; a < 5; a++) {
+      await sleep(1000);
+      var state = await page.evaluate('(function(){ var b=document.querySelector(\'[data-testid="tweetButtonInline"]\'); return b&&!b.disabled?"ready":"no"; })()');
+      if (state === "ready") break;
+    }
     var r = await page.evaluate('(function(){ var b=document.querySelector(\'[data-testid="tweetButtonInline"]\'); if(!b||b.disabled)return "not ready"; b.click(); return "replied"; })()');
     return { content: [{ type: "text", text: r }] };
   });
