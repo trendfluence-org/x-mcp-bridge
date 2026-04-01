@@ -55,6 +55,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Sync manifest.json version
         run: |
@@ -82,6 +83,11 @@ jobs:
           # mcpb names the output after the directory; rename to match convention
           mv *.mcpb x-mcp-server-v${VERSION}.mcpb
           echo "Built x-mcp-server-v${VERSION}.mcpb ($(du -sh x-mcp-server-v${VERSION}.mcpb | cut -f1))"
+
+      - name: Publish to npm
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

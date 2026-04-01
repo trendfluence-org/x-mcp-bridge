@@ -1,7 +1,7 @@
 # X MCP Server
 
 <p align="left">
-  <a href="https://github.com/trendfluence-org/x-mcp-server/releases/latest" target="_blank"><img src="https://img.shields.io/github/v/release/trendfluence-org/x-mcp-server?color=blue" alt="Latest Release"></a>
+  <a href="https://www.npmjs.com/package/twitter-bridge-mcp" target="_blank"><img src="https://img.shields.io/npm/v/twitter-bridge-mcp?color=blue" alt="npm"></a>
   <a href="https://github.com/trendfluence-org/x-mcp-server/actions/workflows/release.yml" target="_blank"><img src="https://github.com/trendfluence-org/x-mcp-server/actions/workflows/release.yml/badge.svg?branch=main" alt="Release"></a>
   <a href="https://github.com/trendfluence-org/x-mcp-server/blob/main/LICENSE" target="_blank"><img src="https://img.shields.io/badge/License-MIT-%233fb950?labelColor=32383f" alt="License"></a>
 </p>
@@ -16,6 +16,7 @@ Claude ──MCP──▶ x-mcp-server ──Playwright──▶ Chromium (logge
 
 ## Installation Methods
 
+[![npx](https://img.shields.io/badge/npx-Quick_Install-de5fe9?style=for-the-badge&logo=nodedotjs)](#-npx-setup-recommended---universal)
 [![Install MCP Bundle](https://img.shields.io/badge/Claude_Desktop_MCPB-d97757?style=for-the-badge&logo=anthropic)](#-claude-desktop-mcp-bundle)
 [![HTTP Remote](https://img.shields.io/badge/HTTP_Remote-Claude.ai-008fe2?style=for-the-badge&logo=googlechrome&logoColor=white)](#-http-setup-claudeai-remote)
 [![Development](https://img.shields.io/badge/Development-Local-ffdc53?style=for-the-badge&logo=nodedotjs&logoColor=ffdc53)](#-local-setup-develop--contribute)
@@ -66,6 +67,81 @@ Show me my unread DMs and summarize them
 
 > [!NOTE]
 > DM reading works but Twitter's E2E encryption may limit what's visible via browser automation.
+
+<br/>
+<br/>
+
+## 🚀 npx Setup (Recommended — Universal)
+
+**Prerequisites:** [Node.js 18+](https://nodejs.org).
+
+### Installation
+
+**Claude Desktop configuration:**
+
+```json
+{
+  "mcpServers": {
+    "twitter": {
+      "command": "npx",
+      "args": ["-y", "twitter-bridge-mcp", "--stdio"]
+    }
+  }
+}
+```
+
+On first use, Playwright Chromium is downloaded automatically (~100MB, one-time). A browser window then opens for you to log in to Twitter/X. The session is saved to `~/.twitter-bridge-mcp/profile/` — no login needed on subsequent runs.
+
+> [!NOTE]
+> Early tool calls may return an error while the browser is still setting up. If that happens, retry after a few seconds.
+
+### npx Setup Help
+
+<details>
+<summary><b>🔧 Configuration</b></summary>
+
+**Session management:**
+
+```bash
+npx twitter-bridge-mcp --login      # open browser, log in, save session, exit
+npx twitter-bridge-mcp --logout     # delete saved browser profile
+npx twitter-bridge-mcp --status     # check if session is valid and exit
+```
+
+**HTTP mode** (for Claude.ai remote or MCP Inspector):
+
+```bash
+npx twitter-bridge-mcp              # starts HTTP server on :8080
+```
+
+**Environment variables:**
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PORT` | `8080` | HTTP server port |
+| `BASE_URL` | `http://localhost:8080` | Public URL for OAuth discovery |
+| `TWITTER_MCP_PROFILE` | `~/.twitter-bridge-mcp/profile` | Browser profile directory |
+| `HEADLESS` | `true` | Set `false` to show the browser window |
+| `DM_PIN` | *(empty)* | Twitter DM encryption PIN (4 digits, if set up) |
+
+</details>
+
+<details>
+<summary><b>❗ Troubleshooting</b></summary>
+
+**Login loop on every start:**
+
+- The browser profile isn't saving. Check that the `TWITTER_MCP_PROFILE` path is writable.
+
+**Tools time out or are slow:**
+
+- Headless mode can trigger bot detection. Run `npx twitter-bridge-mcp --no-headless` to open a visible browser and debug.
+
+**Playwright Chromium not found:**
+
+- Run `npx playwright install chromium`.
+
+</details>
 
 <br/>
 <br/>
