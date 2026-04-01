@@ -113,6 +113,6 @@ echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":
 |----------|---------|-------------|
 | `PORT` | `8080` | HTTP server port |
 | `BASE_URL` | `http://localhost:8080` | Public URL for OAuth discovery |
-| `TWITTER_MCP_PROFILE` | `~/.twitter-bridge-mcp/profile` | Browser profile path |
+| `TWITTER_MCP_PROFILE` | `~/.x-mcp-bridge/profile` | Browser profile path |
 | `HEADLESS` | `true` | Set `false` to show browser (same as `--no-headless`) |
 | `DM_PIN` | *(empty)* | 4-digit Twitter DM PIN |
