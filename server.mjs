@@ -107,6 +107,7 @@ var _loginTask = null;
 
 async function runLoginFlow() {
   try {
+    await ensureBrowserInstalled();
     console.error("Opening visible browser for Twitter login...");
     var ctx = await launchContext(false);
     var page = ctx.pages()[0] || await ctx.newPage();
@@ -118,9 +119,8 @@ async function runLoginFlow() {
     await ctx.close();
     console.error("Login browser closed. Session ready.");
   } catch(e) {
-    console.error("Login flow error:", e.message);
-  } finally {
-    _loginTask = null;
+    console.error("Login flow error (will retry on next tool call):", e.message);
+    _loginTask = null; // reset so next tool call can try again
   }
 }
 
