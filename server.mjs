@@ -252,14 +252,29 @@ function extractTweetId(url) {
   return m ? m[1] : "";
 }
 
-// Insert text into a Twitter contenteditable box via real clipboard paste.
-// Writing to navigator.clipboard and pressing Ctrl/Cmd+V goes through Twitter's
-// actual paste handler, which correctly triggers React state and enables the post button.
+// Click the tweet submit button — works on both home inline composer (tweetButtonInline)
+// and the dedicated /compose/post page (tweetButton).
+var TWEET_BTN_SEL = '[data-testid="tweetButtonInline"],[data-testid="tweetButton"]';
+
+async function waitAndClickTweetButton(page, retries, delayMs) {
+  for (var a = 0; a < retries; a++) {
+    await sleep(delayMs);
+    var ready = await page.evaluate('(function(){ var b=document.querySelector(\'[data-testid="tweetButtonInline"],[data-testid="tweetButton"]\'); return !!(b&&!b.disabled); })()');
+    if (ready) break;
+  }
+  try {
+    await page.click(TWEET_BTN_SEL);
+    return "ok";
+  } catch(e) {
+    return "not ready: " + e.message;
+  }
+}
+
+// Insert text into a Twitter contenteditable box via ClipboardEvent.
+// DataTransfer paste triggers Twitter's paste handler which updates React state,
+// enabling the tweetButton on the /compose/post modal.
 async function pasteText(page, selector, text) {
-  await page.evaluate('navigator.clipboard.writeText(' + jsStr(text) + ')');
-  await page.click(selector);
-  var mod = process.platform === "darwin" ? "Meta" : "Control";
-  await page.keyboard.press(mod + "+v");
+  await page.evaluate('(function(){ var t=document.querySelector(' + jsStr(selector) + '); if(!t)return; t.focus(); var dt=new DataTransfer(); dt.setData("text/plain",' + jsStr(text) + '); t.dispatchEvent(new ClipboardEvent("paste",{clipboardData:dt,bubbles:true,cancelable:true})); })()');
 }
 
 // === SHARED TWEET PARSER ===
@@ -343,13 +358,8 @@ function makeServer() {
     var hasBox = await page.evaluate('!!document.querySelector(\'[data-testid="tweetTextarea_0"]\')');
     if (!hasBox) return { content: [{ type: "text", text: "Error: compose box not found" }] };
     await pasteText(page, '[data-testid="tweetTextarea_0"]', p.text);
-    for (var a = 0; a < 5; a++) {
-      await sleep(1000);
-      var state = await page.evaluate('(function(){ var b=document.querySelector(\'[data-testid="tweetButtonInline"]\'); return b&&!b.disabled?"ready":"no"; })()');
-      if (state === "ready") break;
-    }
-    var r = await page.evaluate('(function(){ var b=document.querySelector(\'[data-testid="tweetButtonInline"]\'); if(!b||b.disabled)return "not ready"; b.click(); return "posted"; })()');
-    return { content: [{ type: "text", text: r }] };
+    var r = await waitAndClickTweetButton(page, 5, 1000);
+    return { content: [{ type: "text", text: r === "ok" ? "posted" : r }] };
   });
 
   s.tool("twitter_reply", "Reply to a tweet", { tweet_url: z.string(), text: z.string() }, async function(p) {
@@ -366,13 +376,8 @@ function makeServer() {
     // Last textarea on the page is the reply box
     await page.evaluate('document.querySelectorAll(\'[data-testid="tweetTextarea_0"]\')[document.querySelectorAll(\'[data-testid="tweetTextarea_0"]\').length-1].focus()');
     await pasteText(page, '[data-testid="tweetTextarea_0"]:last-of-type', p.text);
-    for (var a = 0; a < 5; a++) {
-      await sleep(1000);
-      var state = await page.evaluate('(function(){ var b=document.querySelector(\'[data-testid="tweetButtonInline"]\'); return b&&!b.disabled?"ready":"no"; })()');
-      if (state === "ready") break;
-    }
-    var r = await page.evaluate('(function(){ var b=document.querySelector(\'[data-testid="tweetButtonInline"]\'); if(!b||b.disabled)return "not ready"; b.click(); return "replied"; })()');
-    return { content: [{ type: "text", text: r }] };
+    var r = await waitAndClickTweetButton(page, 5, 1000);
+    return { content: [{ type: "text", text: r === "ok" ? "replied" : r }] };
   });
 
   s.tool("twitter_like", "Like a tweet (no page navigation)", { tweet_url: z.string() }, async function(p) {
@@ -412,13 +417,8 @@ function makeServer() {
     await sleep(3000);
     var pasteContent = p.text + "\n" + p.tweet_url;
     await pasteText(page, '[data-testid="tweetTextarea_0"]', pasteContent);
-    for (var a = 0; a < 5; a++) {
-      await sleep(2000);
-      var state = await page.evaluate('(function(){ var b=document.querySelector(\'[data-testid="tweetButtonInline"]\'); return b&&!b.disabled?"ready":"no"; })()');
-      if (state.includes("ready")) break;
-    }
-    var r = await page.evaluate('(function(){ var b=document.querySelector(\'[data-testid="tweetButtonInline"]\'); if(!b||b.disabled)return "not ready"; b.click(); return "quoted"; })()');
-    return { content: [{ type: "text", text: r }] };
+    var r = await waitAndClickTweetButton(page, 5, 2000);
+    return { content: [{ type: "text", text: r === "ok" ? "quoted" : r }] };
   });
 
   s.tool("twitter_follow", "Follow a user", { screen_name: z.string() }, async function(p) {
