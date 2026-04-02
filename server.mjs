@@ -313,6 +313,76 @@ async function openAndParseTweets(url, count, waitMs) {
 
 // === GRAPHQL API HELPER ===
 
+// Post a new tweet or reply via Twitter's internal GraphQL API (same approach as Twikit).
+// No browser compose box needed — authenticated fetch() from within the live browser session.
+async function postTweet(text, replyToId) {
+  var page = await ensureOnTwitter();
+  var queryId = "BLx8gngFhHE5eBgLBCT_0Q";
+  var variables = {
+    tweet_text: text,
+    dark_request: false,
+    media: { media_entities: [], possibly_sensitive: false },
+    semantic_annotation_ids: [],
+    disallowed_reply_options: null,
+  };
+  if (replyToId) {
+    variables.reply = { in_reply_to_tweet_id: replyToId, exclude_reply_user_ids: [] };
+  }
+  var features = {
+    premium_content_api_read_enabled: false,
+    communities_web_enable_tweet_community_results_fetch: true,
+    c9s_tweet_anatomy_moderator_badge_enabled: true,
+    responsive_web_grok_analyze_button_fetch_trends_enabled: false,
+    responsive_web_grok_analyze_post_followups_enabled: true,
+    responsive_web_jetfuel_frame: false,
+    responsive_web_grok_share_attachment_enabled: true,
+    responsive_web_grok_annotations_enabled: true,
+    responsive_web_edit_tweet_api_enabled: true,
+    graphql_is_translatable_rweb_tweet_is_translatable_enabled: true,
+    view_counts_everywhere_api_enabled: true,
+    longform_notetweets_consumption_enabled: true,
+    responsive_web_twitter_article_tweet_consumption_enabled: true,
+    content_disclosure_indicator_enabled: true,
+    content_disclosure_ai_generated_indicator_enabled: true,
+    responsive_web_grok_show_grok_translated_post: false,
+    responsive_web_media_download_video_enabled: false,
+    longform_notetweets_inline_media_enabled: true,
+    responsive_web_enhance_cards_enabled: false,
+    creator_subscriptions_tweet_preview_api_enabled: true,
+    freedom_of_speech_not_reach_fetch_enabled: true,
+    standardized_nudges_misinfo: true,
+    tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled: true,
+    tweet_awards_web_tipping_enabled: false,
+    tweetypie_unmention_optimization_enabled: true,
+    responsive_web_graphql_skip_user_profile_image_extensions_enabled: false,
+    responsive_web_graphql_timeline_navigation_enabled: true,
+    interactive_text_enabled: true,
+    responsive_web_text_conversations_enabled: false,
+    responsive_web_graphql_exclude_directive_enabled: true,
+    verified_phone_label_enabled: false,
+    vibe_api_enabled: false,
+    longform_notetweets_rich_text_read_enabled: true,
+  };
+  var body = JSON.stringify({ variables, features, queryId });
+  return await page.evaluate(async ([qid, b]) => {
+    var ct0 = document.cookie.split(";").map(c => c.trim()).find(c => c.startsWith("ct0=")).split("=")[1];
+    var r = await fetch("/i/api/graphql/" + qid + "/CreateTweet", {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "authorization": "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA",
+        "x-csrf-token": ct0,
+        "content-type": "application/json",
+      },
+      body: b,
+    });
+    var json = await r.json();
+    if (!r.ok) return "error: " + r.status + " " + JSON.stringify(json).slice(0, 300);
+    var id = json?.data?.create_tweet?.tweet_results?.result?.rest_id;
+    return id ? "posted: " + id : "error: " + JSON.stringify(json).slice(0, 300);
+  }, [queryId, body]);
+}
+
 async function twitterAPI(mutation, tweetId, extraVars) {
   var page = await ensureOnTwitter();
   var endpoints = {
@@ -355,22 +425,17 @@ function makeServer() {
 
   // === WRITE TOOLS ===
 
+  s.tool("twitter_post", "Post a new tweet", { text: z.string() }, async function(p) {
+    var r = await postTweet(p.text);
+    return { content: [{ type: "text", text: r }] };
+  });
+
   s.tool("twitter_reply", "Reply to a tweet", { tweet_url: z.string(), text: z.string() }, async function(p) {
     if (!isTwitterUrl(p.tweet_url)) return { content: [{ type: "text", text: "Error: invalid Twitter URL" }] };
-    var page = await getBrowserPage();
-    await page.goto(p.tweet_url, { waitUntil: "domcontentloaded" });
-    var found = false;
-    for (var attempt = 0; attempt < 3; attempt++) {
-      await sleep(3000);
-      var count = await page.evaluate('document.querySelectorAll(\'[data-testid="tweetTextarea_0"]\').length');
-      if (count > 0) { found = true; break; }
-    }
-    if (!found) return { content: [{ type: "text", text: "Error: reply box not found" }] };
-    // Last textarea on the page is the reply box
-    await page.evaluate('document.querySelectorAll(\'[data-testid="tweetTextarea_0"]\')[document.querySelectorAll(\'[data-testid="tweetTextarea_0"]\').length-1].focus()');
-    await pasteText(page, '[data-testid="tweetTextarea_0"]:last-of-type', p.text);
-    var r = await waitAndClickTweetButton(page, 5, 1000);
-    return { content: [{ type: "text", text: r === "ok" ? "replied" : r }] };
+    var id = extractTweetId(p.tweet_url);
+    if (!id) return { content: [{ type: "text", text: "Error: could not extract tweet ID" }] };
+    var r = await postTweet(p.text, id);
+    return { content: [{ type: "text", text: r }] };
   });
 
   s.tool("twitter_like", "Like a tweet (no page navigation)", { tweet_url: z.string() }, async function(p) {

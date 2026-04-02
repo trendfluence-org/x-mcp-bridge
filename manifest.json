@@ -2,7 +2,7 @@
   "manifest_version": "0.4",
   "name": "x-mcp-server",
   "display_name": "X MCP Server",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Connect Claude to Twitter/X via Playwright browser automation — no API key needed",
   "long_description": "# X MCP Server\n\nConnect Claude to your Twitter/X account using Playwright browser automation. No API key required. No manual browser setup.\n\n## First-time setup\n\n1. Install the `.mcpb` bundle in Claude Desktop.\n2. On the first tool call, a browser window opens automatically — log in to Twitter/X.\n3. The session is saved to `~/.x-mcp-bridge/profile/`. No login needed on subsequent runs.\n\n## Configuration (optional)\n\n- `TWITTER_MCP_PROFILE` — custom browser profile directory (default: `~/.x-mcp-bridge/profile`)\n- `DM_PIN` — 4-digit PIN for Twitter DM unlock screen (if set up)\n",
   "author": {
@@ -21,7 +21,8 @@
     }
   },
   "tools": [
-{ "name": "twitter_reply",         "description": "Reply to a tweet" },
+    { "name": "twitter_post",          "description": "Post a new tweet" },
+    { "name": "twitter_reply",         "description": "Reply to a tweet" },
     { "name": "twitter_like",          "description": "Like a tweet (no page navigation)" },
     { "name": "twitter_retweet",       "description": "Retweet (no page navigation)" },
     { "name": "twitter_undo",          "description": "Undo an action: unlike, unretweet, or delete tweet" },
