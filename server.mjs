@@ -366,7 +366,7 @@ async function postTweet(text, replyToId) {
   var body = JSON.stringify({ variables, features, fieldToggles: {}, queryId: "a1p9RWpkYKBjWv_I3WzS-A" });
   return await page.evaluate(async ([b]) => {
     var ct0 = document.cookie.split(";").map(c => c.trim()).find(c => c.startsWith("ct0=")).split("=")[1];
-    var r = await fetch("https://twitter.com/i/api/graphql/a1p9RWpkYKBjWv_I3WzS-A/CreateTweet", {
+    var r = await fetch("/i/api/graphql/a1p9RWpkYKBjWv_I3WzS-A/CreateTweet", {
       method: "POST",
       credentials: "include",
       headers: {
