@@ -1,6 +1,6 @@
 {
   "name": "x-mcp-bridge",
-  "version": "0.1.9",
+  "version": "0.2.0",
   "description": "Connect Claude to Twitter/X via Playwright browser automation — no API key needed",
   "type": "module",
   "main": "server.mjs",

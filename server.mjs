@@ -263,7 +263,16 @@ async function waitAndClickTweetButton(page, retries, delayMs) {
     if (ready) break;
   }
   try {
-    await page.click(TWEET_BTN_SEL);
+    // Get button position and move mouse naturally before clicking
+    var box = await page.locator(TWEET_BTN_SEL).first().boundingBox();
+    if (!box) return "not ready: button not found";
+    var x = box.x + box.width / 2 + (Math.random() * 4 - 2);
+    var y = box.y + box.height / 2 + (Math.random() * 4 - 2);
+    await page.mouse.move(x / 2, y / 2); // move from a distance
+    await sleep(80 + Math.random() * 120);
+    await page.mouse.move(x, y, { steps: 8 });
+    await sleep(40 + Math.random() * 60);
+    await page.mouse.click(x, y);
     return "ok";
   } catch(e) {
     return "not ready: " + e.message;
