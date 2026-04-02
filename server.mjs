@@ -373,6 +373,10 @@ async function postTweet(text, replyToId) {
         "authorization": "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA",
         "x-csrf-token": ct0,
         "content-type": "application/json",
+        "x-twitter-active-user": "yes",
+        "x-twitter-auth-type": "OAuth2Session",
+        "x-twitter-client-language": "en",
+        "referer": "https://x.com/",
       },
       body: b,
     });
