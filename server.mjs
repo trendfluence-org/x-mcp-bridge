@@ -355,20 +355,6 @@ function makeServer() {
 
   // === WRITE TOOLS ===
 
-  s.tool("twitter_post", "Post a new tweet", { text: z.string() }, async function(p) {
-    var page = await getBrowserPage();
-    await page.goto("https://x.com/compose/post", { waitUntil: "domcontentloaded" });
-    await sleep(3000);
-    var hasBox = await page.evaluate('!!document.querySelector(\'[data-testid="tweetTextarea_0"]\')');
-    if (!hasBox) return { content: [{ type: "text", text: "Error: compose box not found" }] };
-    await pasteText(page, '[data-testid="tweetTextarea_0"]', p.text);
-    // Wait for link preview card to finish loading (if URL in text) before clicking Post
-    await page.waitForSelector('[data-testid="card.wrapper"]', { timeout: 8000 }).catch(() => {});
-    await sleep(1000); // extra buffer after card loads
-    var r = await waitAndClickTweetButton(page, 8, 1000);
-    return { content: [{ type: "text", text: r === "ok" ? "posted" : r }] };
-  });
-
   s.tool("twitter_reply", "Reply to a tweet", { tweet_url: z.string(), text: z.string() }, async function(p) {
     if (!isTwitterUrl(p.tweet_url)) return { content: [{ type: "text", text: "Error: invalid Twitter URL" }] };
     var page = await getBrowserPage();

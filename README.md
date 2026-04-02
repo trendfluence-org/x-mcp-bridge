@@ -43,7 +43,6 @@ Show me my unread DMs and summarize them
 
 | Tool | Method | Status |
 |------|--------|--------|
-| `twitter_post` | Browser automation | Working |
 | `twitter_reply` | Browser automation | Working |
 | `twitter_like` | GraphQL API | Working |
 | `twitter_retweet` | GraphQL API | Working |
