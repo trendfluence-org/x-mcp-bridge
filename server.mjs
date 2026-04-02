@@ -263,16 +263,11 @@ async function waitAndClickTweetButton(page, retries, delayMs) {
     if (ready) break;
   }
   try {
-    // Get button position and move mouse naturally before clicking
-    var box = await page.locator(TWEET_BTN_SEL).first().boundingBox();
-    if (!box) return "not ready: button not found";
-    var x = box.x + box.width / 2 + (Math.random() * 4 - 2);
-    var y = box.y + box.height / 2 + (Math.random() * 4 - 2);
-    await page.mouse.move(x / 2, y / 2); // move from a distance
-    await sleep(80 + Math.random() * 120);
-    await page.mouse.move(x, y, { steps: 8 });
-    await sleep(40 + Math.random() * 60);
-    await page.mouse.click(x, y);
+    // Focus the compose textarea and submit via Ctrl+Enter (CDP keyboard event,
+    // indistinguishable from real keyboard input — avoids bot-detection on button clicks)
+    await page.locator('[data-testid="tweetTextarea_0"]').last().click();
+    await sleep(50 + Math.random() * 100);
+    await page.keyboard.press('Control+Enter');
     return "ok";
   } catch(e) {
     return "not ready: " + e.message;
@@ -367,7 +362,10 @@ function makeServer() {
     var hasBox = await page.evaluate('!!document.querySelector(\'[data-testid="tweetTextarea_0"]\')');
     if (!hasBox) return { content: [{ type: "text", text: "Error: compose box not found" }] };
     await pasteText(page, '[data-testid="tweetTextarea_0"]', p.text);
-    var r = await waitAndClickTweetButton(page, 5, 1000);
+    // Wait for link preview card to finish loading (if URL in text) before clicking Post
+    await page.waitForSelector('[data-testid="card.wrapper"]', { timeout: 8000 }).catch(() => {});
+    await sleep(1000); // extra buffer after card loads
+    var r = await waitAndClickTweetButton(page, 8, 1000);
     return { content: [{ type: "text", text: r === "ok" ? "posted" : r }] };
   });
 
@@ -426,7 +424,9 @@ function makeServer() {
     await sleep(3000);
     var pasteContent = p.text + "\n" + p.tweet_url;
     await pasteText(page, '[data-testid="tweetTextarea_0"]', pasteContent);
-    var r = await waitAndClickTweetButton(page, 5, 2000);
+    await page.waitForSelector('[data-testid="card.wrapper"]', { timeout: 8000 }).catch(() => {});
+    await sleep(1000);
+    var r = await waitAndClickTweetButton(page, 8, 1000);
     return { content: [{ type: "text", text: r === "ok" ? "quoted" : r }] };
   });
 
